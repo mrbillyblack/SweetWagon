@@ -1,63 +1,61 @@
 """
 redis_writer.py
 ---------------
-Writes scraped ER wait time records into Redis.
+Single point of contact between SweetWagon and Redis.
+All reads and writes go through here — scraper.py and main.py
+both import from this module; neither talks to Redis directly.
 
 Schema
 ------
-Each location gets two keys:
-
-  er:wait:<location_id>          — Hash of the latest record for that location
-  er:wait:<location_id>:history  — List of JSON snapshots (capped at 288 entries
-                                   = 24 hours at a 5-minute scrape interval)
-
-A sorted set index lets the frontend fetch all locations at once:
-
-  er:locations                   — Sorted set: member=location_id, score=wait_minutes
-                                   (so ZRANGE er:locations 0 -1 WITHSCORES returns
-                                   all locations sorted by current wait time)
-
-A string key holds the last scrape timestamp:
-
-  er:last_scraped                — ISO-8601 UTC timestamp string
+  er:wait:<id>            Hash    — latest scraped record for a location
+  er:wait:<id>:history    List    — up to 288 snapshots (24h at 5-min cadence)
+  er:locations            SortedSet — all location IDs scored by wait_minutes
+  er:last_scraped         String  — ISO-8601 UTC timestamp of last scrape
+  sw:checkins:<id>        List    — anonymous community check-ins (90-min TTL)
 """
 
 import json
 import logging
 import os
+import time
 from datetime import datetime, timezone
 
 import redis
 
 log = logging.getLogger(__name__)
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-HISTORY_CAP = 288  # 24 hours × 12 scrapes/hour
+REDIS_URL         = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+HISTORY_CAP       = 288        # 24 hours × 12 scrapes/hour
+CHECKIN_CAP       = 500        # max check-ins stored per location
+CHECKIN_TTL       = 90 * 60   # seconds — check-ins older than this are ignored
+LOCATION_TTL      = 3_600      # 1 hour — scraped hash expires if scraper stops
+HISTORY_TTL       = 86_400     # 24 hours
 
 
 def get_client() -> redis.Redis:
     return redis.from_url(REDIS_URL, decode_responses=True)
 
 
-def write_to_redis(records: list[dict]) -> None:
+# ── Writes ─────────────────────────────────────────────────────────────────────
+
+def write_locations(records: list[dict]) -> None:
     """
     Persist a list of scraped location records to Redis.
+    Called by scraper.py after each successful scrape.
 
-    Each record must contain at minimum:
+    Each record must contain:
         id, name, address, borough, lat, lng,
         wait_minutes, scraped_at, source
     """
     r = get_client()
-
-    pipeline = r.pipeline(transaction=True)
+    pipe = r.pipeline(transaction=True)
 
     for rec in records:
-        loc_id = rec["id"]
-        hash_key = f"er:wait:{loc_id}"
+        loc_id      = rec["id"]
+        hash_key    = f"er:wait:{loc_id}"
         history_key = f"er:wait:{loc_id}:history"
 
-        # ── Latest record as a flat hash (easy field-level reads) ──────────
-        pipeline.hset(hash_key, mapping={
+        pipe.hset(hash_key, mapping={
             "id":           rec["id"],
             "name":         rec["name"],
             "address":      rec["address"],
@@ -68,57 +66,121 @@ def write_to_redis(records: list[dict]) -> None:
             "scraped_at":   rec["scraped_at"],
             "source":       rec["source"],
         })
-        pipeline.expire(hash_key, 3600)  # auto-expire after 1 hour of no updates
+        pipe.expire(hash_key, LOCATION_TTL)
 
-        # ── Append to history list, cap at HISTORY_CAP ────────────────────
-        pipeline.lpush(history_key, json.dumps(rec))
-        pipeline.ltrim(history_key, 0, HISTORY_CAP - 1)
-        pipeline.expire(history_key, 86_400)  # 24 hours
+        pipe.lpush(history_key, json.dumps(rec))
+        pipe.ltrim(history_key, 0, HISTORY_CAP - 1)
+        pipe.expire(history_key, HISTORY_TTL)
 
-        # ── Update sorted set index (score = wait time for easy sorting) ──
-        pipeline.zadd("er:locations", {loc_id: rec["wait_minutes"]})
+        pipe.zadd("er:locations", {loc_id: rec["wait_minutes"]})
 
-    # ── Global last-scraped timestamp ─────────────────────────────────────
-    pipeline.set("er:last_scraped", datetime.now(timezone.utc).isoformat())
-    pipeline.expire("er:last_scraped", 3600)
+    pipe.set("er:last_scraped", datetime.now(timezone.utc).isoformat())
+    pipe.expire("er:last_scraped", LOCATION_TTL)
+    pipe.execute()
 
-    pipeline.execute()
-    log.info("Wrote %d record(s) to Redis (%s)", len(records), REDIS_URL)
+    log.info("Wrote %d location(s) to Redis", len(records))
 
 
-def read_all_locations(r: redis.Redis | None = None) -> list[dict]:
+def write_checkin(record: dict) -> None:
     """
-    Convenience reader — returns all location records sorted by wait time.
-    Useful for testing or for a simple API endpoint.
-    """
-    if r is None:
-        r = get_client()
+    Persist a single anonymous community check-in.
+    Called by the POST /api/checkins route in main.py.
 
-    loc_ids = r.zrange("er:locations", 0, -1)  # sorted by wait_minutes asc
+    Record must contain:
+        checkin_id, location_id, arrived_at, busyness,
+        wait_minutes, been_seen, submitted_at, ts
+    """
+    r = get_client()
+    key = f"sw:checkins:{record['location_id']}"
+
+    pipe = r.pipeline(transaction=True)
+    pipe.lpush(key, json.dumps(record))
+    pipe.ltrim(key, 0, CHECKIN_CAP - 1)
+    pipe.expire(key, CHECKIN_TTL)
+    pipe.execute()
+
+    log.info("Wrote check-in %s", record["checkin_id"])
+
+
+# ── Reads ──────────────────────────────────────────────────────────────────────
+
+def read_last_scraped() -> str:
+    """Return the ISO-8601 timestamp of the last successful scrape."""
+    r = get_client()
+    return r.get("er:last_scraped") or "unknown"
+
+
+def read_location(location_id: str) -> dict | None:
+    """
+    Return the latest scraped record for a single location,
+    or None if it doesn't exist / has expired.
+    """
+    r = get_client()
+    raw = r.hgetall(f"er:wait:{location_id}")
+    if not raw:
+        return None
+    return _cast_location(raw)
+
+
+def read_all_locations(borough: str | None = None) -> list[dict]:
+    """
+    Return all location records sorted by wait time (shortest first).
+    Optionally filter by borough name (case-insensitive).
+    """
+    r = get_client()
+    loc_ids = r.zrange("er:locations", 0, -1)
     results = []
     for loc_id in loc_ids:
-        data = r.hgetall(f"er:wait:{loc_id}")
-        if data:
-            data["wait_minutes"] = int(data["wait_minutes"])
-            data["lat"] = float(data["lat"])
-            data["lng"] = float(data["lng"])
-            results.append(data)
+        raw = r.hgetall(f"er:wait:{loc_id}")
+        if not raw:
+            continue
+        loc = _cast_location(raw)
+        if borough and loc["borough"].lower() != borough.lower():
+            continue
+        results.append(loc)
     return results
 
 
-def read_history(location_id: str, limit: int = 12, r: redis.Redis | None = None) -> list[dict]:
+def read_history(location_id: str, limit: int = 12) -> list[dict]:
     """
-    Returns up to `limit` historical snapshots for a given location,
-    most recent first.
+    Return up to `limit` historical snapshots for a location,
+    most recent first. Useful for sparkline charts.
     """
-    if r is None:
-        r = get_client()
+    r = get_client()
     raw = r.lrange(f"er:wait:{location_id}:history", 0, limit - 1)
     return [json.loads(entry) for entry in raw]
 
 
+def read_checkins(location_id: str, limit: int = 500) -> list[dict]:
+    """
+    Return recent anonymous check-ins for a location.
+    Filters out anything older than CHECKIN_TTL seconds.
+    """
+    r = get_client()
+    raw = r.lrange(f"sw:checkins:{location_id}", 0, -1)
+    now = time.time()
+    recent = [
+        json.loads(c) for c in raw
+        if now - json.loads(c).get("ts", 0) < CHECKIN_TTL
+    ]
+    return recent[:limit]
+
+
+# ── Internal helpers ───────────────────────────────────────────────────────────
+
+def _cast_location(raw: dict) -> dict:
+    """Cast Redis string values back to their correct Python types."""
+    return {
+        **raw,
+        "wait_minutes": int(raw["wait_minutes"]),
+        "lat":          float(raw["lat"]),
+        "lng":          float(raw["lng"]),
+    }
+
+
+# ── CLI sanity check ───────────────────────────────────────────────────────────
+
 if __name__ == "__main__":
-    # Quick sanity-check read
     logging.basicConfig(level=logging.INFO)
     locs = read_all_locations()
     if locs:
