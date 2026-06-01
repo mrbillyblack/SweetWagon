@@ -1,0 +1,40 @@
+# Caddyfile
+# ---------
+# Reverse proxy for SweetWagon.
+# Replace "localhost" with your domain when deploying beyond local.
+#
+# Local dev:   http://localhost  → routes to the API
+# Production:  swap localhost for your real domain and Caddy will
+#              automatically provision a TLS certificate via Let's Encrypt.
+
+localhost {
+    # Route all /api/* and /docs/* requests to FastAPI
+    handle /api/* {
+        reverse_proxy api:8000
+    }
+
+    handle /docs* {
+        reverse_proxy api:8000
+    }
+
+    handle /openapi.json {
+        reverse_proxy api:8000
+    }
+
+    # Health check endpoint
+    handle /health {
+        reverse_proxy api:8000
+    }
+
+    # Everything else is reserved for the Next.js frontend
+    # Uncomment when frontend container is added:
+    # handle /* {
+    #     reverse_proxy frontend:3000
+    # }
+
+    # Logging
+    log {
+        output stdout
+        format console
+    }
+}
