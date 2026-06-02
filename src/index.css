@@ -103,6 +103,7 @@ h2 {
   font-size: 1.45rem;
   line-height: 1.15;
   letter-spacing: 0;
+  overflow-wrap: anywhere;
 }
 
 h3 {
@@ -110,6 +111,7 @@ h3 {
   font-size: 1rem;
   line-height: 1.25;
   letter-spacing: 0;
+  overflow-wrap: anywhere;
 }
 
 .brand-block p,
@@ -357,8 +359,14 @@ h3 {
   gap: 14px;
 }
 
+.recommendation-card__top > div,
+.hospital-card__header > div {
+  min-width: 0;
+}
+
 .recommendation-card__top p {
   margin-bottom: 0;
+  overflow-wrap: anywhere;
 }
 
 .badge-stack {
@@ -396,6 +404,7 @@ h3 {
 
 .big-metric,
 .metric {
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.76);
@@ -416,8 +425,11 @@ h3 {
 }
 
 .big-metric strong {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   color: var(--ink);
-  font-size: clamp(1.15rem, 7vw, 1.9rem);
+  font-size: clamp(1.2rem, 3vw, 1.85rem);
   line-height: 1.05;
 }
 
@@ -432,6 +444,11 @@ h3 {
 
 .big-metric.is-muted strong {
   color: #7a8594;
+}
+
+.big-metric.is-unknown strong {
+  font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+  line-height: 1.12;
 }
 
 .recommendation-card__footer {
@@ -450,6 +467,8 @@ h3 {
   align-items: center;
   justify-content: center;
   width: fit-content;
+  max-width: 100%;
+  text-align: center;
 }
 
 .list-section {
@@ -552,30 +571,60 @@ h3 {
 
 .er-map {
   position: relative;
-  min-height: 390px;
+  min-height: 420px;
   overflow: hidden;
   border-bottom: 1px solid var(--border);
-  background:
-    linear-gradient(rgba(12, 125, 120, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(12, 125, 120, 0.08) 1px, transparent 1px),
-    radial-gradient(circle at 25% 25%, rgba(28, 102, 212, 0.12), transparent 30%),
-    radial-gradient(circle at 72% 56%, rgba(23, 138, 91, 0.12), transparent 34%),
-    #eef7f5;
-  background-size:
-    32px 32px,
-    32px 32px,
-    auto,
-    auto,
-    auto;
+  background: #dce9e4;
+  aspect-ratio: 16 / 9;
 }
 
 .er-map::before {
   position: absolute;
-  inset: 22px;
-  border: 1px dashed rgba(12, 125, 120, 0.2);
-  border-radius: 8px;
+  z-index: 1;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(23, 33, 43, 0.1)),
+    radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.22), transparent 26%);
   content: "";
   pointer-events: none;
+}
+
+.er-map__tiles {
+  position: absolute;
+  inset: 0;
+}
+
+.er-map__tiles img {
+  position: absolute;
+  display: block;
+  object-fit: cover;
+  user-select: none;
+}
+
+.map-empty {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--muted);
+  font-weight: 800;
+  text-align: center;
+}
+
+.map-attribution {
+  position: absolute;
+  z-index: 4;
+  right: 10px;
+  bottom: 10px;
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #475467;
+  font-size: 0.68rem;
+  font-weight: 800;
+  box-shadow: 0 8px 18px rgba(23, 33, 43, 0.12);
 }
 
 .map-loading {
@@ -593,24 +642,27 @@ h3 {
 .map-pin,
 .user-map-marker {
   position: absolute;
-  z-index: 2;
-  transform: translate(-50%, -50%);
+  z-index: 3;
+  transform: translate(-50%, -100%);
 }
 
 .map-pin {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: min(220px, 58vw);
-}
-
-.map-pin__dot {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  min-width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 44px;
+  outline: none;
+}
+
+.map-pin__dot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
   border: 3px solid #ffffff;
   border-radius: 50%;
   color: #ffffff;
@@ -622,14 +674,40 @@ h3 {
 }
 
 .map-pin__label {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  z-index: 5;
   display: grid;
   gap: 2px;
-  min-width: 0;
+  width: max-content;
+  min-width: 144px;
+  max-width: 210px;
   border: 1px solid rgba(255, 255, 255, 0.78);
   border-radius: 8px;
   padding: 7px 9px;
   background: rgba(255, 255, 255, 0.88);
   box-shadow: 0 10px 22px rgba(23, 33, 43, 0.14);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition:
+    opacity 140ms ease,
+    visibility 140ms ease;
+  visibility: hidden;
+}
+
+.map-pin.is-label-left .map-pin__label {
+  top: 2px;
+  right: 44px;
+  left: auto;
+  transform: none;
+}
+
+.map-pin.is-label-right .map-pin__label {
+  top: 2px;
+  left: 44px;
+  transform: none;
 }
 
 .map-pin__label strong,
@@ -651,11 +729,19 @@ h3 {
 }
 
 .map-pin:not(.is-recommended) .map-pin__label {
-  display: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.map-pin:hover .map-pin__label,
+.map-pin:focus-visible .map-pin__label,
+.map-pin.is-recommended .map-pin__label {
+  opacity: 1;
+  visibility: visible;
 }
 
 .map-pin.is-recommended {
-  z-index: 3;
+  z-index: 4;
 }
 
 .map-pin.is-recommended .map-pin__dot {
@@ -715,14 +801,31 @@ h3 {
 
 .map-detail {
   display: grid;
-  gap: 4px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
   border-left: 5px solid #7a8594;
   border-radius: 8px;
   padding: 10px 12px;
   background: #f8fbfa;
 }
 
+.map-detail__rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #7a8594;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
 .map-detail span {
+  display: block;
+  margin-bottom: 3px;
   color: var(--muted);
   font-size: 0.72rem;
   font-weight: 900;
@@ -730,13 +833,18 @@ h3 {
 }
 
 .map-detail strong {
+  display: block;
+  overflow-wrap: anywhere;
   color: var(--ink);
   line-height: 1.2;
 }
 
 .map-detail small {
+  display: block;
+  margin-top: 4px;
   color: var(--muted);
   font-weight: 750;
+  line-height: 1.35;
 }
 
 .map-detail.is-recommended {
@@ -744,16 +852,32 @@ h3 {
   background: #ebf8f1;
 }
 
+.map-detail.is-recommended .map-detail__rank {
+  background: var(--green);
+}
+
 .map-detail.is-good {
   border-left-color: var(--blue);
+}
+
+.map-detail.is-good .map-detail__rank {
+  background: var(--blue);
 }
 
 .map-detail.is-watch {
   border-left-color: #d98b06;
 }
 
+.map-detail.is-watch .map-detail__rank {
+  background: #d98b06;
+}
+
 .map-detail.is-slow {
   border-left-color: var(--red);
+}
+
+.map-detail.is-slow .map-detail__rank {
+  background: var(--red);
 }
 
 .list-section__header {
@@ -849,9 +973,17 @@ h3 {
 }
 
 .metric strong {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   color: var(--ink);
   font-size: 1.05rem;
   line-height: 1.15;
+}
+
+.metric.is-unknown strong {
+  color: #7a8594;
+  font-size: 0.98rem;
 }
 
 .metric.is-highlighted {
@@ -906,7 +1038,7 @@ h3 {
   }
 
   .map-details {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 
   .map-pin:not(.is-recommended) .map-pin__label {
@@ -914,11 +1046,11 @@ h3 {
   }
 
   .big-metrics {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .metric-row {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hospital-card {
@@ -944,7 +1076,7 @@ h3 {
 
 @media (min-width: 980px) {
   .map-details {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 
   .hospital-card {
@@ -958,5 +1090,11 @@ h3 {
   .hospital-card__meta,
   .reason-line {
     grid-column: 1 / 3;
+  }
+}
+
+@media (min-width: 1120px) {
+  .big-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

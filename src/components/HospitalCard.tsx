@@ -40,8 +40,12 @@ export function HospitalCard({ hospital, rank, isDemo }: HospitalCardProps) {
 }
 
 function Metric({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+  const className = ["metric", highlight ? "is-highlighted" : "", value === "Unknown" ? "is-unknown" : ""]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className={highlight ? "metric is-highlighted" : "metric"}>
+    <div className={className}>
       <span>{label}</span>
       <strong>{value}</strong>
     </div>

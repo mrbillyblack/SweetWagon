@@ -67,8 +67,17 @@ function Metric({
   emphasis?: boolean;
   muted?: boolean;
 }) {
+  const className = [
+    "big-metric",
+    emphasis ? "is-emphasis" : "",
+    muted ? "is-muted" : "",
+    value === "Unknown" ? "is-unknown" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className={emphasis ? "big-metric is-emphasis" : muted ? "big-metric is-muted" : "big-metric"}>
+    <div className={className}>
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
