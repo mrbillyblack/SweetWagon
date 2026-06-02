@@ -9,7 +9,7 @@ export async function fetchLocations(): Promise<Location[]> {
 }
 
 export async function fetchCheckins(locationId: string): Promise<CheckInRecord[]> {
-  const res = await fetch(`${BASE}/checkins/${locationId}?limit=20`);
+  const res = await fetch(`${BASE}/checkins/${locationId}?limit=100`);
   if (!res.ok) throw new Error(`Failed to fetch check-ins: ${res.status}`);
   return res.json();
 }

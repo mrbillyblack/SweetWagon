@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ERMap } from './components/ERMap';
 import { GeolocationPrompt } from './components/GeolocationPrompt';
+import { LocationBar } from './components/LocationBar';
 import { LocationPanel } from './components/LocationPanel';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useLocations } from './hooks/useLocations';
@@ -9,26 +10,34 @@ import { pinColor } from './types';
 
 export default function App() {
   const { locations, loading, error } = useLocations();
-  const { state: geoState, request: requestGeo, dismiss: dismissGeo } = useGeolocation();
+  const { state: geoState, request: requestGeo, setManual: setManualGeo, dismiss: dismissGeo } = useGeolocation();
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
   const showGeoPrompt = geoState.status === 'idle';
   const userLat = geoState.status === 'granted' ? geoState.lat : undefined;
   const userLng = geoState.status === 'granted' ? geoState.lng : undefined;
+  const userLabel = geoState.status === 'granted' ? geoState.label : null;
 
   return (
     <div className="app">
       {/* Top bar */}
       <header className="topbar">
-        <span className="topbar-logo">🚑 SweetWagon</span>
-        <div className="topbar-legend">
-          <span className="legend-dot green" />
-          <span className="legend-label">&lt;7m</span>
-          <span className="legend-dot yellow" />
-          <span className="legend-label">&lt;15m</span>
-          <span className="legend-dot red" />
-          <span className="legend-label">15m+</span>
+        <div className="topbar-row">
+          <span className="topbar-logo">🚑 SweetWagon</span>
+          <div className="topbar-legend">
+            <span className="legend-dot green" />
+            <span className="legend-label">&lt;7m</span>
+            <span className="legend-dot yellow" />
+            <span className="legend-label">&lt;15m</span>
+            <span className="legend-dot red" />
+            <span className="legend-label">15m+</span>
+          </div>
         </div>
+        <LocationBar
+          label={userLabel}
+          onGPS={requestGeo}
+          onManual={setManualGeo}
+        />
       </header>
 
       {/* Map */}
@@ -85,7 +94,11 @@ export default function App() {
 
       {/* Geolocation prompt */}
       {showGeoPrompt && !selectedLocation && (
-        <GeolocationPrompt onAllow={requestGeo} onDismiss={dismissGeo} />
+        <GeolocationPrompt
+          onAllow={requestGeo}
+          onManual={setManualGeo}
+          onDismiss={dismissGeo}
+        />
       )}
     </div>
   );

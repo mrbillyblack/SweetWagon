@@ -56,6 +56,9 @@ export function LocationPanel({ location, onClose }: Props) {
   const colorHex = color === 'green' ? '#22c55e' : color === 'yellow' ? '#eab308' : '#ef4444';
 
   const commentsOnly = checkins.filter((c) => c.comment);
+  const [showAllComments, setShowAllComments] = useState(false);
+  const PREVIEW_COUNT = 3;
+  const visibleComments = showAllComments ? commentsOnly : commentsOnly.slice(0, PREVIEW_COUNT);
 
   return (
     <div className="panel">
@@ -85,23 +88,50 @@ export function LocationPanel({ location, onClose }: Props) {
         </div>
 
         {/* Community comments */}
+        {loadingCheckins && (
+          <div className="comments-loading">Loading reports…</div>
+        )}
+
+        {!loadingCheckins && commentsOnly.length === 0 && (
+          <div className="comments-empty">
+            No comments yet — be the first to leave a heads-up.
+          </div>
+        )}
+
         {!loadingCheckins && commentsOnly.length > 0 && (
           <div className="panel-comments">
-            <h3>From the community</h3>
-            {commentsOnly.slice(0, 5).map((c) => (
-              <div key={c.checkin_id} className="comment-card">
-                {c.busyness !== null && (
-                  <span
-                    className="comment-busyness"
-                    style={{ color: BUSYNESS_COLORS[c.busyness] }}
-                  >
-                    {BUSYNESS_LABELS[c.busyness]}
-                  </span>
-                )}
-                <p className="comment-text">"{c.comment}"</p>
-                <span className="comment-time">{timeAgo(c.submitted_at)}</span>
-              </div>
-            ))}
+            <h3>
+              From the community
+              <span className="comment-count">{commentsOnly.length}</span>
+            </h3>
+            <div className="comment-feed">
+              {visibleComments.map((c) => (
+                <div key={c.checkin_id} className="comment-card">
+                  <div className="comment-header">
+                    {c.busyness !== null && (
+                      <span
+                        className="comment-busyness"
+                        style={{ color: BUSYNESS_COLORS[c.busyness] }}
+                      >
+                        {BUSYNESS_LABELS[c.busyness]}
+                      </span>
+                    )}
+                    <span className="comment-time">{timeAgo(c.submitted_at)}</span>
+                  </div>
+                  <p className="comment-text">{c.comment}</p>
+                </div>
+              ))}
+            </div>
+            {commentsOnly.length > PREVIEW_COUNT && (
+              <button
+                className="comments-toggle"
+                onClick={() => setShowAllComments((v) => !v)}
+              >
+                {showAllComments
+                  ? 'Show less'
+                  : `Show all ${commentsOnly.length} comments`}
+              </button>
+            )}
           </div>
         )}
 
