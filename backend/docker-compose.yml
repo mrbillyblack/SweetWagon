@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
     environment:
       REDIS_URL: redis://redis:6379/0
-      CORS_ORIGINS: http://localhost,https://localhost
+      CORS_ORIGINS: http://localhost,https://localhost,http://localhost:5173
     depends_on:
       redis:
         condition: service_healthy

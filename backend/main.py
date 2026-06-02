@@ -50,7 +50,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",")
 
 app.add_middleware(
     CORSMiddleware,
@@ -85,10 +85,11 @@ class LocationWithCommunity(Location):
 
 class CheckIn(BaseModel):
     location_id: str
-    arrived_minutes_ago: int = Field(ge=0, le=600)
+    arrived_minutes_ago: int = Field(default=0, ge=0, le=600)
     busyness: Optional[int] = Field(default=None, ge=0, le=2)
     wait_minutes: Optional[int] = Field(default=None, ge=0, le=600)
     been_seen: bool = False
+    comment: Optional[str] = Field(default=None, max_length=280)
 
     @field_validator("location_id")
     @classmethod
@@ -97,6 +98,14 @@ class CheckIn(BaseModel):
         if v not in valid:
             raise ValueError(f"Unknown location_id: {v}")
         return v
+
+    @field_validator("comment")
+    @classmethod
+    def sanitize_comment(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip()
+        return v if v else None
 
 
 class CheckInResponse(BaseModel):
@@ -113,6 +122,7 @@ class CheckInRecord(BaseModel):
     wait_minutes: Optional[int]
     been_seen: bool
     submitted_at: str
+    comment: Optional[str] = None
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -211,6 +221,7 @@ def submit_checkin(checkin: CheckIn):
         "busyness":    checkin.busyness,
         "wait_minutes": checkin.wait_minutes,
         "been_seen":   checkin.been_seen,
+        "comment":     checkin.comment,
         "submitted_at": datetime.fromtimestamp(now, tz=timezone.utc).isoformat(),
         "ts":          now,
     })
