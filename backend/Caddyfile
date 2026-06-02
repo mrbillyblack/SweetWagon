@@ -7,7 +7,7 @@
 # Production:  swap localhost for your real domain and Caddy will
 #              automatically provision a TLS certificate via Let's Encrypt.
 
-localhost {
+http://localhost {
     # Route all /api/* and /docs/* requests to FastAPI
     handle /api/* {
         reverse_proxy api:8000
@@ -31,6 +31,11 @@ localhost {
     # handle /* {
     #     reverse_proxy frontend:3000
     # }
+
+    # Catch-all — forward everything else to the API
+    handle {
+        reverse_proxy api:8000
+    }
 
     # Logging
     log {

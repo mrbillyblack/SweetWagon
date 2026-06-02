@@ -30,6 +30,25 @@ services:
     networks:
       - sweetwagon
 
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: sweetwagon-scraper
+    restart: unless-stopped
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    command: >
+      sh -c "while true; do
+        python scraper.py;
+        sleep 60;
+      done"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - sweetwagon
+
   caddy:
     image: caddy:2-alpine
     container_name: sweetwagon-caddy

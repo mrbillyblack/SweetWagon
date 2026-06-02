@@ -11,7 +11,6 @@ Run on cron:   */5 * * * * /usr/bin/python3 /path/to/scraper.py
 """
 
 import json
-import re
 import sys
 import logging
 from datetime import datetime, timezone
@@ -56,7 +55,6 @@ LOCATION_MAP = [
         "lat": 40.6436,
         "lng": -74.0051,
     },
-    #cobble hill
     {
         "id": "cobble-hill",
         "match": "Home Depot",
@@ -87,6 +85,13 @@ def fetch_html(url: str) -> str:
 
 
 def parse_wait_times(html: str) -> list[dict]:
+    """
+    Iterate over each <li class="our-locations__additional-location"> block
+    and extract the location title and wait time number from within it.
+
+    Each <li> is self-contained — title and wait number are scoped inside it,
+    so there is no risk of cross-matching between locations.
+    """
     soup = BeautifulSoup(html, "html.parser")
     scraped_at = datetime.now(timezone.utc).isoformat()
     results = []
@@ -94,13 +99,13 @@ def parse_wait_times(html: str) -> list[dict]:
 
     for li in soup.find_all("li", class_="our-locations__additional-location"):
         title_el = li.find(class_="our-locations__location-title")
-        wait_el = li.find(class_="our-locations__wait-time-number")
+        wait_el  = li.find(class_="our-locations__wait-time-number")
 
         # Skip locations with no wait time widget (Suffolk, KiDS ED, etc.)
         if not title_el or not wait_el:
             continue
 
-        title_text = title_el.get_text(strip=True)
+        title_text   = title_el.get_text(strip=True)
         wait_minutes = int(wait_el.get_text(strip=True))
 
         # Match title text against LOCATION_MAP
@@ -116,9 +121,9 @@ def parse_wait_times(html: str) -> list[dict]:
 
         if location["id"] in seen_ids:
             continue  # skip mobile duplicate
-
         seen_ids.add(location["id"])
-        results.append({
+
+        record = {
             "id":           location["id"],
             "name":         location["name"],
             "address":      location["address"],
@@ -128,7 +133,8 @@ def parse_wait_times(html: str) -> list[dict]:
             "wait_minutes": wait_minutes,
             "scraped_at":   scraped_at,
             "source":       "nyu_langone_official",
-        })
+        }
+        results.append(record)
         log.info("  %-15s → %d min", location["id"], wait_minutes)
 
     return results
@@ -202,9 +208,9 @@ if __name__ == "__main__":
     if "--test" in sys.argv:
         test_scrape()
     else:
-        from redis_writer import write_to_redis
+        from redis_writer import write_locations
         records = scrape()
         if records:
-            write_to_redis(records)
+            write_locations(records)
         else:
             log.error("Nothing to write — scrape returned empty results")
