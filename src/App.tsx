@@ -1,6 +1,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { HospitalCard } from "./components/HospitalCard";
 import { RecommendationCard } from "./components/RecommendationCard";
+import { RecommendationMap } from "./components/RecommendationMap";
 import { fetchHospitals } from "./lib/api";
 import { getUserLocation } from "./lib/geo";
 import { scoreHospitals } from "./lib/scoring";
@@ -188,6 +189,14 @@ function App() {
           isDemo={isDemo}
         />
       </main>
+
+      <RecommendationMap
+        hospitals={scoredHospitals}
+        recommendedHospital={recommendedHospital}
+        userLocation={userLocation}
+        urgency={urgency}
+        isLoading={isLoading}
+      />
 
       <section className="list-section">
         <div className="list-section__header">

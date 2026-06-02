@@ -129,6 +129,7 @@ h3 {
 .refresh-panel,
 .controls-panel,
 .recommendation-card,
+.map-card,
 .hospital-card,
 .empty-state,
 .loading-state {
@@ -455,6 +456,306 @@ h3 {
   margin-top: 28px;
 }
 
+.map-section {
+  margin-top: 28px;
+}
+
+.map-section__header {
+  display: grid;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.map-section__header h2 {
+  margin-bottom: 0;
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.legend-dot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 11px 0 30px;
+  background: #ffffff;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.legend-dot::before {
+  position: absolute;
+  left: 11px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  content: "";
+}
+
+.legend-dot.is-recommended::before {
+  background: var(--green);
+}
+
+.legend-dot.is-good::before {
+  background: var(--blue);
+}
+
+.legend-dot.is-watch::before {
+  background: #d98b06;
+}
+
+.legend-dot.is-slow::before {
+  background: var(--red);
+}
+
+.map-card {
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(12, 125, 120, 0.08), transparent 45%),
+    var(--surface);
+}
+
+.map-summary {
+  display: grid;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+  padding: 16px;
+  background: #fbfefd;
+}
+
+.map-summary div {
+  min-width: 0;
+}
+
+.map-summary span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.map-summary strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.er-map {
+  position: relative;
+  min-height: 390px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  background:
+    linear-gradient(rgba(12, 125, 120, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(12, 125, 120, 0.08) 1px, transparent 1px),
+    radial-gradient(circle at 25% 25%, rgba(28, 102, 212, 0.12), transparent 30%),
+    radial-gradient(circle at 72% 56%, rgba(23, 138, 91, 0.12), transparent 34%),
+    #eef7f5;
+  background-size:
+    32px 32px,
+    32px 32px,
+    auto,
+    auto,
+    auto;
+}
+
+.er-map::before {
+  position: absolute;
+  inset: 22px;
+  border: 1px dashed rgba(12, 125, 120, 0.2);
+  border-radius: 8px;
+  content: "";
+  pointer-events: none;
+}
+
+.map-loading {
+  position: absolute;
+  z-index: 4;
+  top: 16px;
+  left: 16px;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.map-pin,
+.user-map-marker {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+}
+
+.map-pin {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(220px, 58vw);
+}
+
+.map-pin__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 950;
+  box-shadow:
+    0 9px 20px rgba(23, 33, 43, 0.2),
+    0 0 0 5px rgba(255, 255, 255, 0.48);
+}
+
+.map-pin__label {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 8px;
+  padding: 7px 9px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 10px 22px rgba(23, 33, 43, 0.14);
+}
+
+.map-pin__label strong,
+.map-pin__label small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-pin__label strong {
+  color: var(--ink);
+  font-size: 0.84rem;
+}
+
+.map-pin__label small {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.map-pin:not(.is-recommended) .map-pin__label {
+  display: none;
+}
+
+.map-pin.is-recommended {
+  z-index: 3;
+}
+
+.map-pin.is-recommended .map-pin__dot {
+  background: var(--green);
+  box-shadow:
+    0 12px 26px rgba(23, 138, 91, 0.35),
+    0 0 0 8px rgba(23, 138, 91, 0.14);
+}
+
+.map-pin.is-good .map-pin__dot {
+  background: var(--blue);
+}
+
+.map-pin.is-watch .map-pin__dot {
+  background: #d98b06;
+}
+
+.map-pin.is-slow .map-pin__dot {
+  background: var(--red);
+}
+
+.map-pin.is-unknown .map-pin__dot {
+  background: #7a8594;
+}
+
+.user-map-marker {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  color: var(--ink);
+  font-weight: 950;
+}
+
+.user-map-marker span {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: #111827;
+  box-shadow:
+    0 0 0 7px rgba(17, 24, 39, 0.12),
+    0 8px 18px rgba(17, 24, 39, 0.26);
+}
+
+.user-map-marker strong {
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 0.76rem;
+}
+
+.map-details {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.map-detail {
+  display: grid;
+  gap: 4px;
+  border-left: 5px solid #7a8594;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #f8fbfa;
+}
+
+.map-detail span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.map-detail strong {
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.map-detail small {
+  color: var(--muted);
+  font-weight: 750;
+}
+
+.map-detail.is-recommended {
+  border-left-color: var(--green);
+  background: #ebf8f1;
+}
+
+.map-detail.is-good {
+  border-left-color: var(--blue);
+}
+
+.map-detail.is-watch {
+  border-left-color: #d98b06;
+}
+
+.map-detail.is-slow {
+  border-left-color: var(--red);
+}
+
 .list-section__header {
   display: grid;
   gap: 14px;
@@ -595,8 +896,21 @@ h3 {
 
   .recommendation-card__top,
   .recommendation-card__footer,
+  .map-section__header,
   .list-section__header {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .map-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .map-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .map-pin:not(.is-recommended) .map-pin__label {
+    display: grid;
   }
 
   .big-metrics {
@@ -629,6 +943,10 @@ h3 {
 }
 
 @media (min-width: 980px) {
+  .map-details {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .hospital-card {
     grid-template-columns: minmax(260px, 1.1fr) minmax(420px, 1fr) auto;
   }
