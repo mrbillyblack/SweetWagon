@@ -1,8 +1,8 @@
 import type { FetchHospitalsResult, Hospital } from "../types";
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
-const ENDPOINTS = ["/api/hospitals", "/hospitals", "/api/wait-times", "/wait-times", "/api/locations"];
+const ENDPOINTS = ["/api/locations", "/api/hospitals", "/hospitals", "/api/wait-times", "/wait-times"];
 
 export async function fetchHospitals(): Promise<FetchHospitalsResult> {
   const attemptedEndpoints: string[] = [];
@@ -37,7 +37,7 @@ export async function fetchHospitals(): Promise<FetchHospitalsResult> {
   return {
     hospitals: demoHospitals(),
     isDemo: true,
-    warning: "Backend unavailable - showing demo data.",
+    warning: "Backend unavailable - showing NYC sample data.",
     attemptedEndpoints,
   };
 }
@@ -225,72 +225,42 @@ function demoHospitals(): Hospital[] {
 
   return [
     {
-      id: "mass-general",
-      name: "Massachusetts General Hospital",
-      address: "55 Fruit St, Boston, MA 02114",
-      waitMinutes: 42,
-      lat: 42.3632,
-      lng: -71.0688,
+      id: "long-island",
+      name: "NYU Langone Hospital — Long Island",
+      address: "259 First St, Mineola, NY 11501",
+      waitMinutes: 4,
+      lat: 40.7484,
+      lng: -73.6407,
       type: "Emergency Room",
       lastUpdated,
     },
     {
-      id: "brigham-womens",
-      name: "Brigham and Women's Hospital",
-      address: "75 Francis St, Boston, MA 02115",
-      waitMinutes: 58,
-      lat: 42.3365,
-      lng: -71.107,
+      id: "cobble-hill",
+      name: "NYU Langone Hospital — Cobble Hill",
+      address: "70 Atlantic Ave, Brooklyn, NY 11201",
+      waitMinutes: 16,
+      lat: 40.6897,
+      lng: -73.9952,
       type: "Emergency Room",
       lastUpdated,
     },
     {
-      id: "boston-medical",
-      name: "Boston Medical Center",
-      address: "1 Boston Medical Center Pl, Boston, MA 02118",
-      waitMinutes: 35,
-      lat: 42.3342,
-      lng: -71.0734,
+      id: "perelman",
+      name: "Ronald O. Perelman Center for Emergency Services",
+      address: "570 First Ave, New York, NY 10016",
+      waitMinutes: 16,
+      lat: 40.7421,
+      lng: -73.9739,
       type: "Emergency Room",
       lastUpdated,
     },
     {
-      id: "beth-israel-deaconess",
-      name: "Beth Israel Deaconess Medical Center",
-      address: "330 Brookline Ave, Boston, MA 02215",
-      waitMinutes: 64,
-      lat: 42.337,
-      lng: -71.1095,
-      type: "Emergency Room",
-      lastUpdated,
-    },
-    {
-      id: "boston-childrens",
-      name: "Boston Children's Hospital",
-      address: "300 Longwood Ave, Boston, MA 02115",
-      waitMinutes: 29,
-      lat: 42.3373,
-      lng: -71.1056,
-      type: "Pediatric ER",
-      lastUpdated,
-    },
-    {
-      id: "tufts-medical",
-      name: "Tufts Medical Center",
-      address: "800 Washington St, Boston, MA 02111",
-      waitMinutes: 47,
-      lat: 42.3497,
-      lng: -71.0638,
-      type: "Emergency Room",
-      lastUpdated,
-    },
-    {
-      id: "cambridge-hospital",
-      name: "Cambridge Hospital",
-      address: "1493 Cambridge St, Cambridge, MA 02139",
-      waitMinutes: 51,
-      lat: 42.3734,
-      lng: -71.1045,
+      id: "brooklyn",
+      name: "NYU Langone Hospital — Brooklyn",
+      address: "150 55th St, Brooklyn, NY 11220",
+      waitMinutes: 17,
+      lat: 40.6436,
+      lng: -74.0051,
       type: "Emergency Room",
       lastUpdated,
     },

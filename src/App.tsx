@@ -15,10 +15,10 @@ const URGENCY_OPTIONS: Array<{ value: Urgency; label: string }> = [
   { value: "severe", label: "Emergency / severe symptoms" },
 ];
 
-const BOSTON_DEMO_LOCATION: UserLocation = {
-  lat: 42.3555,
-  lng: -71.0565,
-  label: "Demo location near downtown Boston",
+const NYC_DEMO_LOCATION: UserLocation = {
+  lat: 40.7527,
+  lng: -73.9772,
+  label: "Demo location near Midtown Manhattan",
 };
 
 function App() {
@@ -99,24 +99,24 @@ function App() {
     event.preventDefault();
 
     if (!manualLocation.trim()) {
-      setManualMessage("Enter a ZIP code or address to use demo Boston coordinates.");
+      setManualMessage("Enter a ZIP code or address to use demo NYC coordinates.");
       return;
     }
 
     setUserLocation({
-      ...BOSTON_DEMO_LOCATION,
+      ...NYC_DEMO_LOCATION,
       label: `Demo location for ${manualLocation.trim()}`,
     });
-    setManualMessage("Geocoding is not connected yet, so demo Boston coordinates are being used.");
+    setManualMessage("Geocoding is not connected yet, so demo NYC coordinates are being used.");
   };
 
   return (
     <div className="app-shell">
       <header className="top-panel">
         <div className="brand-block">
-          <span className="section-kicker">Boston ER decision support</span>
-          <h1>ER Compass Boston</h1>
-          <p>Find the fastest practical ER based on wait time + your location.</p>
+          <span className="section-kicker">NYC ER decision support</span>
+          <h1>SweetWagon ER Compass</h1>
+          <p>Find the fastest practical ER from scraped wait times + your location.</p>
         </div>
         <div className="refresh-panel">
           <span>Last refreshed</span>
@@ -154,7 +154,7 @@ function App() {
                 type="text"
                 value={manualLocation}
                 onChange={(event) => setManualLocation(event.target.value)}
-                placeholder="02118 or 75 Francis St"
+                placeholder="10016 or 570 First Ave"
               />
               <button type="submit">Use</button>
             </div>

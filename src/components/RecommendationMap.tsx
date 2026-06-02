@@ -63,7 +63,7 @@ export function RecommendationMap({
       <div className="map-section__header">
         <div>
           <span className="section-kicker">Recommendation map</span>
-          <h2>Top 5 hospitals on a real area map</h2>
+          <h2>Scraped ER options on a real area map</h2>
         </div>
         <div className="map-legend" aria-label="Map color legend">
           <span className="legend-dot is-recommended">Recommended</span>
