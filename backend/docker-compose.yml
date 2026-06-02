@@ -1,5 +1,20 @@
 services:
 
+  frontend:
+    build:
+      context: ..
+      dockerfile: Dockerfile.frontend
+    container_name: sweetwagon-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    networks:
+      - sweetwagon
+
   redis:
     image: redis:7-alpine
     container_name: sweetwagon-redis
@@ -23,7 +38,9 @@ services:
     restart: unless-stopped
     environment:
       REDIS_URL: redis://redis:6379/0
-      CORS_ORIGINS: http://localhost,https://localhost
+      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000,http://localhost,http://127.0.0.1
+    ports:
+      - "8000:8000"
     depends_on:
       redis:
         condition: service_healthy
