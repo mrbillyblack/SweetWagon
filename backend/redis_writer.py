@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 REDIS_URL         = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 HISTORY_CAP       = 288        # 24 hours × 12 scrapes/hour
 CHECKIN_CAP       = 500        # max check-ins stored per location
-CHECKIN_TTL       = 90 * 60   # seconds — check-ins older than this are ignored
+CHECKIN_TTL       = 2 * 60 * 60  # seconds — check-ins older than this are ignored (2 hours)
 LOCATION_TTL      = 3_600      # 1 hour — scraped hash expires if scraper stops
 HISTORY_TTL       = 86_400     # 24 hours
 
