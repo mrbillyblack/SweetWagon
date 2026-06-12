@@ -36,7 +36,7 @@ export type PinColor = 'green' | 'yellow' | 'red';
 
 export function pinColor(waitMinutes: number): PinColor {
   if (waitMinutes < 7) return 'green';
-  if (waitMinutes < 15) return 'yellow';
+  if (waitMinutes < 25) return 'yellow';
   return 'red';
 }
 

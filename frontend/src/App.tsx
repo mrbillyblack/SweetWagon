@@ -28,9 +28,9 @@ export default function App() {
             <span className="legend-dot green" />
             <span className="legend-label">&lt;7m</span>
             <span className="legend-dot yellow" />
-            <span className="legend-label">&lt;15m</span>
+            <span className="legend-label">&lt;25m</span>
             <span className="legend-dot red" />
-            <span className="legend-label">15m+</span>
+            <span className="legend-label">25m+</span>
           </div>
         </div>
         <LocationBar
